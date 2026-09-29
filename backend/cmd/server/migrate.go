@@ -18,6 +18,7 @@ func migrate(db *gorm.DB) error {
 		&model.DiseasePest{},
 		&model.CareReminder{},
 		&model.Favorite{},
+		&model.FavoriteGroup{},
 		&model.UserGarden{},
 		&model.Question{},
 		&model.Answer{},
@@ -102,8 +103,29 @@ func seed(db *gorm.DB) error {
 		return err
 	}
 
+	// Personal favorite groups for the demo user.
+	favGroups := []model.FavoriteGroup{
+		{UserID: user.ID, Name: "多肉养护"},
+		{UserID: user.ID, Name: "月季专题"},
+	}
+	if err := db.Create(&favGroups).Error; err != nil {
+		return err
+	}
+
+	favorites := []model.Favorite{
+		{UserID: user.ID, TargetType: constants.FavoriteTargetPlant, TargetID: plants[1].ID, GroupID: &favGroups[0].ID},
+		{UserID: user.ID, TargetType: constants.FavoriteTargetArticle, TargetID: articles[1].ID, GroupID: &favGroups[0].ID},
+		{UserID: user.ID, TargetType: constants.FavoriteTargetPlant, TargetID: plants[3].ID, GroupID: &favGroups[1].ID},
+		{UserID: user.ID, TargetType: constants.FavoriteTargetArticle, TargetID: articles[2].ID, GroupID: &favGroups[1].ID},
+		{UserID: user.ID, TargetType: constants.FavoriteTargetPlant, TargetID: plants[0].ID},
+	}
+	if err := db.Create(&favorites).Error; err != nil {
+		return err
+	}
+
 	logger.Info("gbplantwiki seed data created",
 		"users", 2, "plants", len(plants), "articles", len(articles),
-		"pests", len(pests), "reminders", len(reminders), "questions", len(questions), "answers", len(answers))
+		"pests", len(pests), "reminders", len(reminders), "questions", len(questions), "answers", len(answers),
+		"favorite_groups", len(favGroups), "favorites", len(favorites))
 	return nil
 }

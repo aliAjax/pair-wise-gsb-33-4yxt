@@ -28,7 +28,17 @@ func NewFavoriteHandler(svc *service.FavoriteService, logger *slog.Logger) *Favo
 // List handles GET /favorites.
 func (h *FavoriteHandler) List(c *gin.Context) {
 	targetType := c.Query("target_type")
-	items, err := h.svc.ListByUser(middleware.GetUserID(c), targetType)
+	var groupID *uint
+	if raw := c.Query("group_id"); raw != "" {
+		v, err := strconv.ParseUint(raw, 10, 64)
+		if err != nil {
+			c.Error(util.NewAppError(http.StatusBadRequest, constants.CodeBadRequest, "invalid group id"))
+			return
+		}
+		gid := uint(v)
+		groupID = &gid
+	}
+	items, err := h.svc.ListByUser(middleware.GetUserID(c), targetType, groupID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -43,7 +53,7 @@ func (h *FavoriteHandler) Add(c *gin.Context) {
 		c.Error(util.NewAppError(http.StatusBadRequest, constants.CodeBadRequest, constants.MsgInvalidParam))
 		return
 	}
-	f, err := h.svc.Add(middleware.GetUserID(c), req.TargetType, req.TargetID)
+	f, err := h.svc.Add(middleware.GetUserID(c), req.TargetType, req.TargetID, req.GroupID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -64,4 +74,24 @@ func (h *FavoriteHandler) Remove(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, dto.OK(gin.H{"removed": true}))
+}
+
+// Move handles PUT /favorites/:id/group.
+func (h *FavoriteHandler) Move(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.Error(util.NewAppError(http.StatusBadRequest, constants.CodeBadRequest, "invalid favorite id"))
+		return
+	}
+	var req dto.FavoriteMoveRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(util.NewAppError(http.StatusBadRequest, constants.CodeBadRequest, constants.MsgInvalidParam))
+		return
+	}
+	f, err := h.svc.Move(middleware.GetUserID(c), uint(id), req.GroupID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.OK(f))
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <el-row :gutter="16">
-      <el-col :xs="24" :md="10">
+      <el-col :xs="24" :md="9">
         <el-card>
           <template #header>个人资料</template>
           <el-avatar :size="80" :src="profile?.avatar" class="avatar">{{ profile?.nickname?.[0] }}</el-avatar>
@@ -17,18 +17,17 @@
           </el-form>
         </el-card>
       </el-col>
-      <el-col :xs="24" :md="14">
+      <el-col :xs="24" :md="15">
         <el-card>
-          <template #header>我的收藏</template>
-          <el-table :data="favorites" empty-text="暂无收藏">
-            <el-table-column label="类型">
-              <template #default="{ row }">{{ FavoriteTargetTypeMap[row.target_type as FavoriteTargetType] }}</template>
-            </el-table-column>
-            <el-table-column prop="target_id" label="目标 ID" />
-            <el-table-column label="时间">
-              <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
-            </el-table-column>
-          </el-table>
+          <template #header>
+            <div class="fav-header">
+              <span>我的收藏</span>
+              <el-button type="primary" text @click="$router.push('/favorites')">
+                管理收藏夹<el-icon class="el-icon--right"><ArrowRight /></el-icon>
+              </el-button>
+            </div>
+          </template>
+          <FavoriteFolders />
         </el-card>
       </el-col>
     </el-row>
@@ -38,16 +37,14 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { ArrowRight } from '@element-plus/icons-vue'
 import ImageUploader from '@/components/common/ImageUploader.vue'
+import FavoriteFolders from '@/components/common/FavoriteFolders.vue'
 import { useUserStore } from '@/stores/userStore'
-import { listFavorites } from '@/api/favorite'
-import { FavoriteTargetTypeMap, type Favorite, type FavoriteTargetType } from '@/constants/favorite'
-import { formatDate } from '@/utils/dateFormat'
 import type { UserInfo } from '@/types/api'
 
 const userStore = useUserStore()
 const profile = ref<UserInfo | null>(null)
-const favorites = ref<Favorite[]>([])
 const form = reactive({ nickname: '', bio: '', avatar: '' })
 
 onMounted(async () => {
@@ -56,7 +53,6 @@ onMounted(async () => {
   form.nickname = profile.value?.nickname || ''
   form.bio = profile.value?.bio || ''
   form.avatar = profile.value?.avatar || ''
-  favorites.value = await listFavorites()
 })
 
 async function save() {
@@ -67,7 +63,8 @@ async function save() {
 </script>
 
 <style scoped>
-.page { max-width: 1000px; margin: 0 auto; }
+.page { max-width: 1100px; margin: 0 auto; }
 .avatar { margin-bottom: 12px; }
 .profile-form { margin-top: 12px; }
+.fav-header { display: flex; justify-content: space-between; align-items: center; }
 </style>

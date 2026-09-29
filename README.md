@@ -67,7 +67,7 @@ gb-61/
 │   ├── cmd/server/              # main.go + migrate/seed
 │   └── internal/
 │       ├── config/              # 环境变量解析
-│       ├── model/               # 9 个实体，按实体分文件
+│       ├── model/               # 10 个实体，按实体分文件
 │       ├── repository/          # 按实体分文件，哨兵错误
 │       ├── service/             # 按实体分文件，构造器注入
 │       ├── handler/             # 按实体分文件 + upload/home
@@ -145,9 +145,14 @@ gb-61/
 | POST | /api/v1/reminders | 登录（限流） | 创建养护提醒 |
 | PUT | /api/v1/reminders/:id/status | 登录 | 状态流转 pending/done |
 | DELETE | /api/v1/reminders/:id | 登录 | 删除提醒 |
-| GET | /api/v1/favorites | 登录 | 收藏列表 |
-| POST | /api/v1/favorites | 登录（限流） | 添加收藏 |
+| GET | /api/v1/favorites | 登录 | 收藏列表（可按 target_type / group_id 筛选，group_id=0 表示未分类） |
+| POST | /api/v1/favorites | 登录（限流） | 添加收藏，可携带 group_id 直接放入分组 |
+| PUT | /api/v1/favorites/:id/group | 登录 | 调整收藏所属分组（group_id=0 移回未分类） |
 | DELETE | /api/v1/favorites/:targetType/:targetId | 登录 | 取消收藏 |
+| GET | /api/v1/favorite-groups | 登录 | 我的收藏分组列表（含各分组真实收藏数） |
+| POST | /api/v1/favorite-groups | 登录（限流） | 新建分组（归当前账号，账号内名称唯一） |
+| PUT | /api/v1/favorite-groups/:id | 登录 | 重命名自己的分组 |
+| DELETE | /api/v1/favorite-groups/:id | 登录 | 删除分组，组内收藏回到未分类（收藏不删除） |
 | GET | /api/v1/gardens | 登录 | 我的花园列表 |
 | POST | /api/v1/gardens | 登录（限流） | 加入我的花园 |
 | PUT | /api/v1/gardens/:id/reminder | 登录 | 关联养护提醒 |
@@ -175,8 +180,8 @@ gb-61/
 
 ### FavoriteTargetType（收藏目标：plant/article）
 
-- 后端：`backend/internal/constants/favorite.go`（定义）、`backend/internal/model/favorite.go`（模型）、`backend/internal/service/favorite_service.go`（校验）、`backend/internal/constants/log_templates.go`、`database/init.sql`
-- 前端：`frontend/src/constants/favorite.ts`（定义）、`frontend/src/components/common/FavoriteButton.vue`（交互）、`frontend/src/pages/Garden.vue` 与 `frontend/src/pages/Profile.vue`（收藏夹列表）
+- 后端：`backend/internal/constants/favorite.go`（定义）、`backend/internal/model/favorite.go`、`backend/internal/model/favorite_group.go`（个人分组模型）、`backend/internal/service/favorite_service.go`、`backend/internal/service/favorite_group_service.go`（分组增删改查/重名校验/删除回退）、`backend/internal/constants/log_templates.go`、`database/init.sql`（含 favorite_groups 表与种子数据）
+- 前端：`frontend/src/constants/favorite.ts`（定义）、`frontend/src/components/common/FavoriteButton.vue`（交互）、`frontend/src/components/common/FavoriteFolders.vue`（分组管理与收藏归类）、`frontend/src/pages/Favorites.vue`（收藏夹页）、`frontend/src/pages/Garden.vue` 与 `frontend/src/pages/Profile.vue`（收藏展示入口）
 
 ## 横切关注点
 

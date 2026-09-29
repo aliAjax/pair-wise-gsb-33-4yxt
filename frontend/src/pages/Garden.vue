@@ -29,12 +29,21 @@
       </el-col>
       <el-col :xs="24" :md="8">
         <el-card>
-          <template #header>我的收藏</template>
-          <el-table :data="favorites" empty-text="暂无收藏">
+          <template #header>
+            <div class="fav-header">
+              <span>我的收藏</span>
+              <el-button type="primary" text @click="$router.push('/favorites')">
+                管理收藏夹<el-icon class="el-icon--right"><ArrowRight /></el-icon>
+              </el-button>
+            </div>
+          </template>
+          <el-table :data="favorites" empty-text="暂无收藏，去品种库和文章页收藏吧">
             <el-table-column prop="target_type" label="类型" width="80">
               <template #default="{ row }">{{ FavoriteTargetTypeMap[row.target_type as FavoriteTargetType] }}</template>
             </el-table-column>
-            <el-table-column prop="target_id" label="目标 ID" />
+            <el-table-column label="所属分组">
+              <template #default="{ row }">{{ groupName(row.group_id) }}</template>
+            </el-table-column>
           </el-table>
         </el-card>
       </el-col>
@@ -45,21 +54,36 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { ArrowRight } from '@element-plus/icons-vue'
 import ReminderList from '@/components/common/ReminderList.vue'
 import { listGardens, removeGarden } from '@/api/garden'
-import { listFavorites } from '@/api/favorite'
+import { listFavorites, listFavoriteGroups } from '@/api/favorite'
 import { listReminders, deleteReminder, updateReminderStatus } from '@/api/reminder'
-import { FavoriteTargetTypeMap, type Favorite, type FavoriteTargetType } from '@/constants/favorite'
+import {
+  FavoriteTargetTypeMap,
+  UNCATEGORIZED_GROUP_NAME,
+  type Favorite,
+  type FavoriteGroup,
+  type FavoriteTargetType,
+} from '@/constants/favorite'
 import { formatDate } from '@/utils/dateFormat'
 import type { CareReminder, UserGarden } from '@/types/api'
 
 const gardenItems = ref<UserGarden[]>([])
 const favorites = ref<Favorite[]>([])
+const favGroups = ref<FavoriteGroup[]>([])
 const reminders = ref<CareReminder[]>([])
+
+function groupName(groupId: number | null) {
+  if (groupId == null) return UNCATEGORIZED_GROUP_NAME
+  return favGroups.value.find((g) => g.id === groupId)?.name ?? UNCATEGORIZED_GROUP_NAME
+}
 
 onMounted(async () => {
   gardenItems.value = await listGardens()
-  favorites.value = await listFavorites()
+  const [favs, groups] = await Promise.all([listFavorites(), listFavoriteGroups()])
+  favorites.value = favs
+  favGroups.value = groups
   reminders.value = await listReminders()
 })
 
@@ -82,4 +106,5 @@ async function removeReminder(id: number) {
 .page { max-width: 1200px; margin: 0 auto; }
 .block { margin-top: 16px; }
 .garden-name { font-weight: 600; }
+.fav-header { display: flex; justify-content: space-between; align-items: center; }
 </style>

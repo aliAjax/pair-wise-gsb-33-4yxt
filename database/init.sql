@@ -80,8 +80,19 @@ CREATE TABLE IF NOT EXISTS favorites (
   user_id BIGINT UNSIGNED NOT NULL,
   target_type VARCHAR(16) NOT NULL,
   target_id BIGINT UNSIGNED NOT NULL,
+  group_id BIGINT UNSIGNED NULL DEFAULT NULL,
   created_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
-  UNIQUE KEY uk_fav_user_target (user_id, target_type, target_id)
+  UNIQUE KEY uk_fav_user_target (user_id, target_type, target_id),
+  KEY idx_fav_group (group_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS favorite_groups (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(64) NOT NULL,
+  created_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY uk_fav_group_user_name (user_id, name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS user_gardens (
@@ -155,3 +166,14 @@ INSERT INTO questions (user_id, title, content, images, status) VALUES
 INSERT INTO answers (question_id, user_id, content, is_best, like_count) VALUES
   (1, 1, '新上盆植物根系未恢复，建议先放在散射光处缓苗，见干见湿浇水，避免积水。', 0, 5),
   (2, 1, '可以砍头繁殖，砍下的头部晾干后重新扦插，母株会萌发侧芽。', 0, 8);
+
+INSERT INTO favorite_groups (user_id, name) VALUES
+  (2, '多肉养护'),
+  (2, '月季专题');
+
+INSERT INTO favorites (user_id, target_type, target_id, group_id) VALUES
+  (2, 'plant', 2, 1),
+  (2, 'article', 2, 1),
+  (2, 'plant', 4, 2),
+  (2, 'article', 3, 2),
+  (2, 'plant', 1, NULL);
