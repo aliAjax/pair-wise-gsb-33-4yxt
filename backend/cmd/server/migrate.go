@@ -18,6 +18,7 @@ func migrate(db *gorm.DB) error {
 		&model.DiseasePest{},
 		&model.CareReminder{},
 		&model.Favorite{},
+		&model.FavoriteGroup{},
 		&model.UserGarden{},
 		&model.Question{},
 		&model.Answer{},

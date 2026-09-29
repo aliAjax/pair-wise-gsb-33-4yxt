@@ -75,13 +75,23 @@ CREATE TABLE IF NOT EXISTS care_reminders (
   KEY idx_reminders_date (remind_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS favorite_groups (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(64) NOT NULL,
+  created_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+  UNIQUE KEY uk_fav_group_user_name (user_id, name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS favorites (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT UNSIGNED NOT NULL,
   target_type VARCHAR(16) NOT NULL,
   target_id BIGINT UNSIGNED NOT NULL,
+  group_id BIGINT UNSIGNED DEFAULT NULL,
   created_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
-  UNIQUE KEY uk_fav_user_target (user_id, target_type, target_id)
+  UNIQUE KEY uk_fav_user_target (user_id, target_type, target_id),
+  KEY idx_fav_group (group_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS user_gardens (

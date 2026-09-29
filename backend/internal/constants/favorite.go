@@ -6,6 +6,14 @@ const (
 	FavoriteTargetArticle = "article"
 )
 
+// FavoriteGroup bounds and reserved names.
+const (
+	FavoriteGroupNameMax = 64
+	// FavoriteGroupUncategorized is the virtual bucket for favorites without a group.
+	// Real groups may not use this name to avoid ambiguity.
+	FavoriteGroupUncategorized = "未分类"
+)
+
 // ValidFavoriteTargets returns all accepted target types.
 func ValidFavoriteTargets() []string {
 	return []string{FavoriteTargetPlant, FavoriteTargetArticle}

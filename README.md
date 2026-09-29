@@ -67,7 +67,7 @@ gb-61/
 │   ├── cmd/server/              # main.go + migrate/seed
 │   └── internal/
 │       ├── config/              # 环境变量解析
-│       ├── model/               # 9 个实体，按实体分文件
+│       ├── model/               # 10 个实体，按实体分文件
 │       ├── repository/          # 按实体分文件，哨兵错误
 │       ├── service/             # 按实体分文件，构造器注入
 │       ├── handler/             # 按实体分文件 + upload/home
@@ -145,9 +145,13 @@ gb-61/
 | POST | /api/v1/reminders | 登录（限流） | 创建养护提醒 |
 | PUT | /api/v1/reminders/:id/status | 登录 | 状态流转 pending/done |
 | DELETE | /api/v1/reminders/:id | 登录 | 删除提醒 |
-| GET | /api/v1/favorites | 登录 | 收藏列表 |
-| POST | /api/v1/favorites | 登录（限流） | 添加收藏 |
+| GET | /api/v1/favorites | 登录 | 收藏列表（可按 target_type / group_id / uncategorized 过滤） |
+| POST | /api/v1/favorites | 登录（限流） | 添加收藏（可带 group_id，缺省进入未分类） |
+| PUT | /api/v1/favorites/:targetType/:targetId/group | 登录 | 调整收藏所属分组（group_id 为 null/0 回到未分类） |
 | DELETE | /api/v1/favorites/:targetType/:targetId | 登录 | 取消收藏 |
+| GET | /api/v1/favorites/groups | 登录 | 当前账号分组列表（含各分组真实收藏数、未分类数、总数） |
+| POST | /api/v1/favorites/groups | 登录（限流） | 新建个人分组（同账号重名返回 409，不可命名为“未分类”） |
+| DELETE | /api/v1/favorites/groups/:id | 登录 | 删除分组（事务：组内收藏回到未分类，收藏本身不删除） |
 | GET | /api/v1/gardens | 登录 | 我的花园列表 |
 | POST | /api/v1/gardens | 登录（限流） | 加入我的花园 |
 | PUT | /api/v1/gardens/:id/reminder | 登录 | 关联养护提醒 |
@@ -175,8 +179,8 @@ gb-61/
 
 ### FavoriteTargetType（收藏目标：plant/article）
 
-- 后端：`backend/internal/constants/favorite.go`（定义）、`backend/internal/model/favorite.go`（模型）、`backend/internal/service/favorite_service.go`（校验）、`backend/internal/constants/log_templates.go`、`database/init.sql`
-- 前端：`frontend/src/constants/favorite.ts`（定义）、`frontend/src/components/common/FavoriteButton.vue`（交互）、`frontend/src/pages/Garden.vue` 与 `frontend/src/pages/Profile.vue`（收藏夹列表）
+- 后端：`backend/internal/constants/favorite.go`（定义，另含 FavoriteGroupNameMax/FavoriteGroupUncategorized 常量）、`backend/internal/model/favorite.go`（模型，group_id 为空表示未分类）、`backend/internal/model/favorite_group.go`（个人分组模型，(user_id,name) 唯一）、`backend/internal/service/favorite_service.go`、`backend/internal/service/favorite_group_service.go`（校验/日志）、`backend/internal/constants/log_templates.go`、`database/init.sql`
+- 前端：`frontend/src/constants/favorite.ts`（定义，另含 FavoriteGroup 类型与 UNCATEGORIZED_GROUP）、`frontend/src/components/common/FavoriteButton.vue`（交互）、`frontend/src/pages/Favorites.vue`（收藏夹分组管理页）、`frontend/src/pages/Garden.vue` 与 `frontend/src/pages/Profile.vue`（收藏夹列表）
 
 ## 横切关注点
 

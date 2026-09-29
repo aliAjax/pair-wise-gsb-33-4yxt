@@ -19,12 +19,22 @@
       </el-col>
       <el-col :xs="24" :md="14">
         <el-card>
-          <template #header>我的收藏</template>
+          <template #header>
+            <div class="fav-header">
+              <span>我的收藏</span>
+              <el-button type="primary" link @click="$router.push('/favorites')">
+                管理分组<el-icon class="el-icon--right"><ArrowRight /></el-icon>
+              </el-button>
+            </div>
+          </template>
           <el-table :data="favorites" empty-text="暂无收藏">
-            <el-table-column label="类型">
+            <el-table-column label="类型" width="100">
               <template #default="{ row }">{{ FavoriteTargetTypeMap[row.target_type as FavoriteTargetType] }}</template>
             </el-table-column>
             <el-table-column prop="target_id" label="目标 ID" />
+            <el-table-column label="所属分组">
+              <template #default="{ row }">{{ row.group_id ? groupName(row.group_id) : UNCATEGORIZED_GROUP }}</template>
+            </el-table-column>
             <el-table-column label="时间">
               <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
             </el-table-column>
@@ -38,16 +48,18 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { ArrowRight } from '@element-plus/icons-vue'
 import ImageUploader from '@/components/common/ImageUploader.vue'
 import { useUserStore } from '@/stores/userStore'
-import { listFavorites } from '@/api/favorite'
-import { FavoriteTargetTypeMap, type Favorite, type FavoriteTargetType } from '@/constants/favorite'
+import { listFavorites, listFavoriteGroups } from '@/api/favorite'
+import { FavoriteTargetTypeMap, UNCATEGORIZED_GROUP, type Favorite, type FavoriteGroupListData, type FavoriteTargetType } from '@/constants/favorite'
 import { formatDate } from '@/utils/dateFormat'
 import type { UserInfo } from '@/types/api'
 
 const userStore = useUserStore()
 const profile = ref<UserInfo | null>(null)
 const favorites = ref<Favorite[]>([])
+const groupData = ref<FavoriteGroupListData | null>(null)
 const form = reactive({ nickname: '', bio: '', avatar: '' })
 
 onMounted(async () => {
@@ -56,8 +68,14 @@ onMounted(async () => {
   form.nickname = profile.value?.nickname || ''
   form.bio = profile.value?.bio || ''
   form.avatar = profile.value?.avatar || ''
-  favorites.value = await listFavorites()
+  const [favList, groups] = await Promise.all([listFavorites(), listFavoriteGroups()])
+  favorites.value = favList
+  groupData.value = groups
 })
+
+function groupName(id: number): string {
+  return groupData.value?.groups.find((g) => g.id === id)?.name || UNCATEGORIZED_GROUP
+}
 
 async function save() {
   await userStore.save({ nickname: form.nickname, bio: form.bio, avatar: form.avatar })
@@ -70,4 +88,5 @@ async function save() {
 .page { max-width: 1000px; margin: 0 auto; }
 .avatar { margin-bottom: 12px; }
 .profile-form { margin-top: 12px; }
+.fav-header { display: flex; align-items: center; justify-content: space-between; }
 </style>
